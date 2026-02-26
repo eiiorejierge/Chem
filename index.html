@@ -125,6 +125,17 @@
       letter-spacing: 0.1em;
     }
 
+    .type-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 0.28rem 0.75rem;
+      border-radius: 99px;
+      background: #2d2d50;
+      color: #a78bfa;
+    }
+
     .prompt {
       font-size: 0.95rem;
       color: #9090b8;
@@ -236,6 +247,7 @@
       <span class="mode-label" id="mode-label"></span>
     </div>
 
+    <div class="type-badge" id="type-badge"></div>
     <div class="prompt" id="prompt">Loading…</div>
     <div class="given"  id="given"></div>
 
@@ -421,6 +433,19 @@ function normalise(s) {
   return s.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
+// Return a human-readable label for an entry
+function getLabel(entry) {
+  if (entry.cat === 'acid')     return 'Acid';
+  if (entry.cat === 'ionic')    return 'Ionic Bond';
+  if (entry.cat === 'covalent') return 'Covalent Bond';
+  if (entry.cat === 'ion') {
+    // Monatomic: single element symbol + optional subscript, e.g. "Li", "Mg", "O", "N"
+    const body = stripCharge(entry.formula);
+    return /^[A-Z][a-z]?\d*$/.test(body) ? 'Monatomic Ion' : 'Polyatomic Ion';
+  }
+  return '';
+}
+
 // ─────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────
@@ -466,6 +491,7 @@ function pickQuestion() {
   current   = pool[Math.floor(Math.random() * pool.length)];
   direction = Math.random() < 0.5 ? 'nameToFormula' : 'formulaToName';
 
+  document.getElementById('type-badge').textContent    = getLabel(current);
   document.getElementById('feedback').textContent      = '';
   document.getElementById('feedback').className        = 'feedback';
   document.getElementById('correct-answer').textContent = '';
