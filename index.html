@@ -413,7 +413,7 @@ const ALL = [
 
 // Strip charge from a formula string: "SO42-" → "SO4", "NH4+" → "NH4"
 function stripCharge(f) {
-  return f.replace(/\d*[+-]+$/, '');
+  return f.replace(/(?:\^[+-]?\d+|\d*[+-])$/, '');
 }
 
 // Render formula body (subscripts only, no charge)
@@ -424,9 +424,46 @@ function renderFormula(f) {
 // Render a charged ion formula: body subscripted + charge superscripted
 // e.g. "SO42-" → "SO<sub>4</sub><sup>2-</sup>"
 function renderIonFormula(f) {
-  const m = f.match(/^(.*?)(\d*[+-]+)$/);
+  const m = f.match(/^(.*?)(\^[+-]?\d+|\d*[+-])$/);
   if (!m) return renderFormula(f);
-  return renderFormula(m[1]) + '<sup>' + m[2] + '</sup>';
+  const body = m[1];
+  const charge = formatCharge(m[2]);
+  return renderFormula(body) + '<sup>' + charge + '</sup>';
+}
+
+// Normalize different charge notations into "2-" / "3+" / "+" / "-"
+// Supports: "SO42-", "SO4-2", "SO4^2-", "SO4^-2"
+function formatCharge(rawCharge) {
+  const c = rawCharge.replace('^', '');
+  if (/^[+-]$/.test(c)) return c;
+
+  const signFirst = c.match(/^([+-])(\d+)$/);
+  if (signFirst) return `${signFirst[2]}${signFirst[1]}`;
+
+  const numFirst = c.match(/^(\d+)([+-])$/);
+  if (numFirst) return `${numFirst[1]}${numFirst[2]}`;
+
+  return c;
+}
+
+function isPolyatomicIon(entry) {
+  if (!entry || entry.cat !== 'ion') return false;
+  const body = stripCharge(entry.formula);
+  return !/^[A-Z][a-z]?\d*$/.test(body);
+}
+
+function buildLargePool(entries, targetSize = 1200) {
+  if (entries.length >= targetSize) return [...entries];
+
+  const expanded = [];
+  while (expanded.length < targetSize) {
+    const shuffled = [...entries].sort(() => Math.random() - 0.5);
+    for (const entry of shuffled) {
+      expanded.push(entry);
+      if (expanded.length >= targetSize) break;
+    }
+  }
+  return expanded;
 }
 
 function normalise(s) {
@@ -468,7 +505,8 @@ const LABELS = {
 //  NAVIGATION
 // ─────────────────────────────────────────────
 function startQuiz(cat) {
-  pool = cat === 'all' ? ALL : ALL.filter(e => e.cat === cat);
+  const filtered = cat === 'all' ? ALL : ALL.filter(e => e.cat === cat);
+  pool = buildLargePool(filtered, 1200);
   scoreCorrect = 0;
   scoreTotal   = 0;
   document.getElementById('score-correct').textContent = '0';
@@ -504,8 +542,8 @@ function pickQuestion() {
     givenEl.textContent   = current.name;
   } else {
     promptEl.textContent  = 'Write the name for:';
-    // Show charge for ions so they're unambiguous vs covalent look-alikes
-    givenEl.innerHTML = current.ion
+    // Show charge only for polyatomic ions
+    givenEl.innerHTML = isPolyatomicIon(current)
       ? renderIonFormula(current.formula)
       : renderFormula(current.formula);
   }
