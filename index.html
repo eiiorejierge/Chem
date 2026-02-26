@@ -45,17 +45,6 @@
       box-shadow: 0 8px 40px #0008;
     }
 
-    .category-badge {
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      padding: 0.3rem 0.8rem;
-      border-radius: 99px;
-      background: #2d2d50;
-      color: #a78bfa;
-    }
-
     .prompt {
       font-size: 0.95rem;
       color: #9090b8;
@@ -142,7 +131,6 @@
 <p class="subtitle">Name ↔ Formula practice</p>
 
 <div class="card">
-  <div class="category-badge" id="category">—</div>
   <div class="prompt" id="prompt">Loading…</div>
   <div class="given" id="given"></div>
 
@@ -284,23 +272,26 @@ const ions = [
 //  HELPERS
 // ─────────────────────────────────────────────
 
+// Strip charge notation from a formula string (e.g. "SO42-" → "SO4")
+function stripCharge(f) {
+  // Remove trailing charge like "2-", "3+", "-", "+"
+  return f.replace(/\d*[+-]+$/, '');
+}
+
 // Turn "Ca3(PO4)2" → "Ca<sub>3</sub>(PO<sub>4</sub>)<sub>2</sub>"
 function renderFormula(f) {
-  return f.replace(/(\d+)/g, '<sub>$1</sub>')
-           .replace(/([+-])/, '<sup>$1</sup>');
+  return f.replace(/(\d+)/g, '<sub>$1</sub>');
 }
 
 // Normalise an answer for comparison
 function normalise(s) {
   return s.trim().toLowerCase()
-    .replace(/\s+/g, ' ')          // collapse whitespace
-    .replace(/[‐‑‒–—]/g, '-');    // unify dashes
+    .replace(/\s+/g, ' ');         // collapse whitespace
 }
 
-// Build a set of acceptable answers for a formula (flexible subscripts)
+// Build accepted answers for a formula (charge-free only)
 function formulaAliases(f) {
-  // Accept with or without spaces, and accept "2+" vs "2 +" etc.
-  const base = f.replace(/\s/g, '');
+  const base = stripCharge(f).replace(/\s/g, '');
   return [normalise(base)];
 }
 
@@ -320,7 +311,6 @@ function pickQuestion() {
   current = ions[Math.floor(Math.random() * ions.length)];
   direction = Math.random() < 0.5 ? 'nameToFormula' : 'formulaToName';
 
-  document.getElementById('category').textContent = current.category;
   document.getElementById('feedback').textContent = '';
   document.getElementById('feedback').className = 'feedback';
   document.getElementById('correct-answer').textContent = '';
@@ -333,7 +323,8 @@ function pickQuestion() {
     givenEl.textContent = current.name;
   } else {
     promptEl.textContent = 'Write the name for:';
-    givenEl.innerHTML = renderFormula(current.formula);
+    // Display formula without charge
+    givenEl.innerHTML = renderFormula(stripCharge(current.formula));
   }
 
   const input = document.getElementById('answer-input');
@@ -359,15 +350,11 @@ function checkAnswer() {
   if (direction === 'nameToFormula') {
     const accepted = formulaAliases(current.formula);
     correct = accepted.includes(userNorm);
-    // Also accept without charge notation for training purposes
-    const noCharge = normalise(current.formula.replace(/[0-9]*[+-]/g,''));
-    correct = correct || userNorm === noCharge;
   } else {
     correct = userNorm === normalise(current.name);
-    // accept common alternate forms (strip trailing "ion")
+    // also accept without trailing "ion"
     if (!correct) {
-      const stripped = normalise(current.name.replace(/ ion$/i,''));
-      correct = userNorm === stripped;
+      correct = userNorm === normalise(current.name.replace(/ ion$/i, ''));
     }
   }
 
@@ -385,7 +372,7 @@ function checkAnswer() {
   } else {
     feedbackEl.textContent = 'Wrong!';
     feedbackEl.className = 'feedback wrong';
-    const rightAns = direction === 'nameToFormula' ? current.formula : current.name;
+    const rightAns = direction === 'nameToFormula' ? stripCharge(current.formula) : current.name;
     correctAnsEl.textContent = `Answer: ${rightAns}`;
     showingResult = true;
     document.getElementById('submit-btn').textContent = 'Next →';
