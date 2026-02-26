@@ -31,18 +31,98 @@
       margin-bottom: 2.5rem;
     }
 
+    /* ── MENU ───────────────────────────────── */
+    #menu {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    #menu h2 {
+      font-size: 1.1rem;
+      color: #9090b8;
+      margin-bottom: 0.4rem;
+      font-weight: 400;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      width: 100%;
+    }
+
+    .menu-btn {
+      padding: 1rem 0.75rem;
+      border-radius: 14px;
+      border: 1.5px solid #2d2d50;
+      background: #1a1a2e;
+      color: #e0e0ff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, transform 0.1s;
+      text-align: center;
+    }
+
+    .menu-btn:hover  { background: #25254a; border-color: #a78bfa; }
+    .menu-btn:active { transform: scale(0.97); }
+
+    .menu-btn.all {
+      grid-column: span 2;
+      background: #a78bfa;
+      color: #0f0f1a;
+      border-color: #a78bfa;
+      font-size: 1.05rem;
+    }
+    .menu-btn.all:hover { background: #c4b5fd; border-color: #c4b5fd; }
+
+    .menu-btn .emoji { display: block; font-size: 1.5rem; margin-bottom: 0.3rem; }
+
+    /* ── QUIZ ───────────────────────────────── */
+    #quiz { display: none; width: 100%; max-width: 520px; }
+
     .card {
       background: #1a1a2e;
       border: 1px solid #2d2d50;
       border-radius: 16px;
       padding: 2.5rem 3rem;
       width: 100%;
-      max-width: 520px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 1.4rem;
       box-shadow: 0 8px 40px #0008;
+    }
+
+    .back-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: -0.4rem;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: #7c7c9e;
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 0.2rem 0;
+      transition: color 0.15s;
+    }
+    .back-btn:hover { color: #a78bfa; }
+
+    .mode-label {
+      font-size: 0.75rem;
+      color: #4a4a70;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
     }
 
     .prompt {
@@ -77,7 +157,6 @@
       outline: none;
       transition: border-color 0.2s;
     }
-
     input[type="text"]:focus { border-color: #a78bfa; }
 
     button#submit-btn {
@@ -91,8 +170,7 @@
       cursor: pointer;
       transition: background 0.2s, transform 0.1s;
     }
-
-    button#submit-btn:hover { background: #c4b5fd; }
+    button#submit-btn:hover  { background: #c4b5fd; }
     button#submit-btn:active { transform: scale(0.96); }
 
     .feedback {
@@ -102,7 +180,6 @@
       min-height: 1.5rem;
       letter-spacing: 0.04em;
     }
-
     .feedback.correct { color: #4ade80; }
     .feedback.wrong   { color: #f87171; }
 
@@ -116,13 +193,12 @@
     .score {
       font-size: 0.85rem;
       color: #7c7c9e;
-      margin-top: 0.5rem;
+      margin-top: 0.3rem;
     }
-
     .score span { color: #a78bfa; font-weight: 700; }
 
-    /* subscript styling inside .given */
     sub { font-size: 0.65em; }
+    sup { font-size: 0.65em; }
   </style>
 </head>
 <body>
@@ -130,269 +206,342 @@
 <h1>Ion Review</h1>
 <p class="subtitle">Name ↔ Formula practice</p>
 
-<div class="card">
-  <div class="prompt" id="prompt">Loading…</div>
-  <div class="given" id="given"></div>
-
-  <div class="answer-row">
-    <input type="text" id="answer-input" placeholder="Your answer…" autocomplete="off" spellcheck="false" />
-    <button id="submit-btn">Check</button>
+<!-- ── MENU ─────────────────────────────── -->
+<div id="menu">
+  <h2>Choose a category</h2>
+  <div class="menu-grid">
+    <button class="menu-btn all" onclick="startQuiz('all')">
+      <span class="emoji">⚡</span>Everything
+    </button>
+    <button class="menu-btn" onclick="startQuiz('ion')">
+      <span class="emoji">⚛️</span>Ions
+    </button>
+    <button class="menu-btn" onclick="startQuiz('ionic')">
+      <span class="emoji">🔗</span>Ionic Compounds
+    </button>
+    <button class="menu-btn" onclick="startQuiz('covalent')">
+      <span class="emoji">🧪</span>Covalent Compounds
+    </button>
+    <button class="menu-btn" onclick="startQuiz('acid')">
+      <span class="emoji">💧</span>Acids
+    </button>
   </div>
+</div>
 
-  <div class="feedback" id="feedback"></div>
-  <div class="correct-answer" id="correct-answer"></div>
-  <div class="score">Score: <span id="score-correct">0</span> / <span id="score-total">0</span></div>
+<!-- ── QUIZ ─────────────────────────────── -->
+<div id="quiz">
+  <div class="card">
+    <div class="back-row">
+      <button class="back-btn" onclick="goBack()">← Back</button>
+      <span class="mode-label" id="mode-label"></span>
+    </div>
+
+    <div class="prompt" id="prompt">Loading…</div>
+    <div class="given"  id="given"></div>
+
+    <div class="answer-row">
+      <input type="text" id="answer-input" placeholder="Your answer…"
+             autocomplete="off" spellcheck="false" />
+      <button id="submit-btn">Check</button>
+    </div>
+
+    <div class="feedback"      id="feedback"></div>
+    <div class="correct-answer" id="correct-answer"></div>
+    <div class="score">Score: <span id="score-correct">0</span> / <span id="score-total">0</span></div>
+  </div>
 </div>
 
 <script>
 // ─────────────────────────────────────────────
 //  DATA
 // ─────────────────────────────────────────────
+// ion:true  → show charge in displayed formula (avoids clash with covalent look-alikes)
+// cat       → category key for filtering
 
-// Each entry: { name, formula, category }
-// formula uses plain text – subscripts added by renderFormula()
-
-const ions = [
+const ALL = [
   // ── Monatomic cations ──────────────────────
-  { name: "lithium ion",    formula: "Li+",   category: "Monatomic Ion" },
-  { name: "sodium ion",     formula: "Na+",   category: "Monatomic Ion" },
-  { name: "potassium ion",  formula: "K+",    category: "Monatomic Ion" },
-  { name: "magnesium ion",  formula: "Mg2+",  category: "Monatomic Ion" },
-  { name: "calcium ion",    formula: "Ca2+",  category: "Monatomic Ion" },
-  { name: "aluminum ion",   formula: "Al3+",  category: "Monatomic Ion" },
-  { name: "iron(II) ion",   formula: "Fe2+",  category: "Monatomic Ion" },
-  { name: "iron(III) ion",  formula: "Fe3+",  category: "Monatomic Ion" },
-  { name: "copper(I) ion",  formula: "Cu+",   category: "Monatomic Ion" },
-  { name: "copper(II) ion", formula: "Cu2+",  category: "Monatomic Ion" },
-  { name: "zinc ion",       formula: "Zn2+",  category: "Monatomic Ion" },
-  { name: "silver ion",     formula: "Ag+",   category: "Monatomic Ion" },
-  { name: "lead(II) ion",   formula: "Pb2+",  category: "Monatomic Ion" },
-  { name: "barium ion",     formula: "Ba2+",  category: "Monatomic Ion" },
-  { name: "hydrogen ion",   formula: "H+",    category: "Monatomic Ion" },
-  { name: "ammonium",       formula: "NH4+",  category: "Polyatomic Ion" },
+  { name: "lithium",    formula: "Li+",  ion: true, cat: "ion" },
+  { name: "sodium",     formula: "Na+",  ion: true, cat: "ion" },
+  { name: "potassium",  formula: "K+",   ion: true, cat: "ion" },
+  { name: "magnesium",  formula: "Mg2+", ion: true, cat: "ion" },
+  { name: "calcium",    formula: "Ca2+", ion: true, cat: "ion" },
+  { name: "aluminum",   formula: "Al3+", ion: true, cat: "ion" },
+  { name: "zinc",       formula: "Zn2+", ion: true, cat: "ion" },
+  { name: "silver",     formula: "Ag+",  ion: true, cat: "ion" },
+  { name: "barium",     formula: "Ba2+", ion: true, cat: "ion" },
+  { name: "hydrogen",   formula: "H+",   ion: true, cat: "ion" },
 
   // ── Monatomic anions ──────────────────────
-  { name: "fluoride",  formula: "F-",   category: "Monatomic Ion" },
-  { name: "chloride",  formula: "Cl-",  category: "Monatomic Ion" },
-  { name: "bromide",   formula: "Br-",  category: "Monatomic Ion" },
-  { name: "iodide",    formula: "I-",   category: "Monatomic Ion" },
-  { name: "oxide",     formula: "O2-",  category: "Monatomic Ion" },
-  { name: "sulfide",   formula: "S2-",  category: "Monatomic Ion" },
-  { name: "nitride",   formula: "N3-",  category: "Monatomic Ion" },
-  { name: "phosphide", formula: "P3-",  category: "Monatomic Ion" },
+  { name: "fluoride",  formula: "F-",  ion: true, cat: "ion" },
+  { name: "chloride",  formula: "Cl-", ion: true, cat: "ion" },
+  { name: "bromide",   formula: "Br-", ion: true, cat: "ion" },
+  { name: "iodide",    formula: "I-",  ion: true, cat: "ion" },
+  { name: "oxide",     formula: "O2-", ion: true, cat: "ion" },
+  { name: "sulfide",   formula: "S2-", ion: true, cat: "ion" },
+  { name: "nitride",   formula: "N3-", ion: true, cat: "ion" },
+  { name: "phosphide", formula: "P3-", ion: true, cat: "ion" },
 
-  // ── Polyatomic anions ─────────────────────
-  { name: "hydroxide",        formula: "OH-",    category: "Polyatomic Ion" },
-  { name: "nitrate",          formula: "NO3-",   category: "Polyatomic Ion" },
-  { name: "nitrite",          formula: "NO2-",   category: "Polyatomic Ion" },
-  { name: "sulfate",          formula: "SO42-",  category: "Polyatomic Ion" },
-  { name: "sulfite",          formula: "SO32-",  category: "Polyatomic Ion" },
-  { name: "phosphate",        formula: "PO43-",  category: "Polyatomic Ion" },
-  { name: "carbonate",        formula: "CO32-",  category: "Polyatomic Ion" },
-  { name: "bicarbonate",      formula: "HCO3-",  category: "Polyatomic Ion" },
-  { name: "acetate",          formula: "C2H3O2-",category: "Polyatomic Ion" },
-  { name: "permanganate",     formula: "MnO4-",  category: "Polyatomic Ion" },
-  { name: "dichromate",       formula: "Cr2O72-",category: "Polyatomic Ion" },
-  { name: "chromate",         formula: "CrO42-", category: "Polyatomic Ion" },
-  { name: "cyanide",          formula: "CN-",    category: "Polyatomic Ion" },
-  { name: "peroxide",         formula: "O22-",   category: "Polyatomic Ion" },
-  { name: "oxalate",          formula: "C2O42-", category: "Polyatomic Ion" },
-  { name: "hydrogen sulfate", formula: "HSO4-",  category: "Polyatomic Ion" },
-  { name: "hydrogen phosphate",formula:"HPO42-", category: "Polyatomic Ion" },
-  { name: "dihydrogen phosphate",formula:"H2PO4-",category:"Polyatomic Ion"},
-  { name: "hypochlorite",     formula: "ClO-",   category: "Polyatomic Ion" },
-  { name: "chlorite",         formula: "ClO2-",  category: "Polyatomic Ion" },
-  { name: "chlorate",         formula: "ClO3-",  category: "Polyatomic Ion" },
-  { name: "perchlorate",      formula: "ClO4-",  category: "Polyatomic Ion" },
-  { name: "silicate",         formula: "SiO44-", category: "Polyatomic Ion" },
-  { name: "thiosulfate",      formula: "S2O32-", category: "Polyatomic Ion" },
+  // ── Polyatomic ions ───────────────────────
+  { name: "ammonium",     formula: "NH4+",    ion: true, cat: "ion" },
+  { name: "hydroxide",    formula: "OH-",     ion: true, cat: "ion" },
+  { name: "nitrate",      formula: "NO3-",    ion: true, cat: "ion" },
+  { name: "nitrite",      formula: "NO2-",    ion: true, cat: "ion" },
+  { name: "sulfate",      formula: "SO42-",   ion: true, cat: "ion" },
+  { name: "sulfite",      formula: "SO32-",   ion: true, cat: "ion" },
+  { name: "phosphate",    formula: "PO43-",   ion: true, cat: "ion" },
+  { name: "carbonate",    formula: "CO32-",   ion: true, cat: "ion" },
+  { name: "bicarbonate",  formula: "HCO3-",   ion: true, cat: "ion" },
+  { name: "acetate",      formula: "C2H3O2-", ion: true, cat: "ion" },
+  { name: "permanganate", formula: "MnO4-",   ion: true, cat: "ion" },
+  { name: "dichromate",   formula: "Cr2O72-", ion: true, cat: "ion" },
+  { name: "chromate",     formula: "CrO42-",  ion: true, cat: "ion" },
+  { name: "cyanide",      formula: "CN-",     ion: true, cat: "ion" },
+  { name: "hypochlorite", formula: "ClO-",    ion: true, cat: "ion" },
+  { name: "chlorite",     formula: "ClO2-",   ion: true, cat: "ion" },
+  { name: "chlorate",     formula: "ClO3-",   ion: true, cat: "ion" },
+  { name: "perchlorate",  formula: "ClO4-",   ion: true, cat: "ion" },
 
-  // ── Ionic bonds ───────────────────────────
-  { name: "sodium chloride",        formula: "NaCl",    category: "Ionic Compound" },
-  { name: "potassium bromide",       formula: "KBr",     category: "Ionic Compound" },
-  { name: "calcium chloride",        formula: "CaCl2",   category: "Ionic Compound" },
-  { name: "magnesium oxide",         formula: "MgO",     category: "Ionic Compound" },
-  { name: "aluminum oxide",          formula: "Al2O3",   category: "Ionic Compound" },
-  { name: "iron(II) chloride",       formula: "FeCl2",   category: "Ionic Compound" },
-  { name: "iron(III) chloride",      formula: "FeCl3",   category: "Ionic Compound" },
-  { name: "copper(II) sulfate",      formula: "CuSO4",   category: "Ionic Compound" },
-  { name: "zinc sulfide",            formula: "ZnS",     category: "Ionic Compound" },
-  { name: "silver nitrate",          formula: "AgNO3",   category: "Ionic Compound" },
-  { name: "barium sulfate",          formula: "BaSO4",   category: "Ionic Compound" },
-  { name: "calcium carbonate",       formula: "CaCO3",   category: "Ionic Compound" },
-  { name: "sodium hydroxide",        formula: "NaOH",    category: "Ionic Compound" },
-  { name: "ammonium chloride",       formula: "NH4Cl",   category: "Ionic Compound" },
-  { name: "potassium nitrate",       formula: "KNO3",    category: "Ionic Compound" },
-  { name: "magnesium sulfate",       formula: "MgSO4",   category: "Ionic Compound" },
-  { name: "calcium phosphate",       formula: "Ca3(PO4)2",category: "Ionic Compound"},
-  { name: "sodium carbonate",        formula: "Na2CO3",  category: "Ionic Compound" },
-  { name: "potassium permanganate",  formula: "KMnO4",   category: "Ionic Compound" },
-  { name: "lead(II) iodide",         formula: "PbI2",    category: "Ionic Compound" },
+  // ── Ionic compounds ───────────────────────
+  { name: "sodium chloride",       formula: "NaCl",       cat: "ionic" },
+  { name: "potassium bromide",      formula: "KBr",        cat: "ionic" },
+  { name: "calcium chloride",       formula: "CaCl2",      cat: "ionic" },
+  { name: "magnesium oxide",        formula: "MgO",        cat: "ionic" },
+  { name: "aluminum oxide",         formula: "Al2O3",      cat: "ionic" },
+  { name: "zinc sulfide",           formula: "ZnS",        cat: "ionic" },
+  { name: "silver nitrate",         formula: "AgNO3",      cat: "ionic" },
+  { name: "barium sulfate",         formula: "BaSO4",      cat: "ionic" },
+  { name: "calcium carbonate",      formula: "CaCO3",      cat: "ionic" },
+  { name: "sodium hydroxide",       formula: "NaOH",       cat: "ionic" },
+  { name: "ammonium chloride",      formula: "NH4Cl",      cat: "ionic" },
+  { name: "potassium nitrate",      formula: "KNO3",       cat: "ionic" },
+  { name: "magnesium sulfate",      formula: "MgSO4",      cat: "ionic" },
+  { name: "calcium phosphate",      formula: "Ca3(PO4)2",  cat: "ionic" },
+  { name: "sodium carbonate",       formula: "Na2CO3",     cat: "ionic" },
+  { name: "potassium permanganate", formula: "KMnO4",      cat: "ionic" },
+  { name: "lead iodide",            formula: "PbI2",       cat: "ionic" },
+  { name: "barium chloride",        formula: "BaCl2",      cat: "ionic" },
+  { name: "sodium sulfate",         formula: "Na2SO4",     cat: "ionic" },
+  { name: "magnesium chloride",     formula: "MgCl2",      cat: "ionic" },
+  { name: "aluminum chloride",      formula: "AlCl3",      cat: "ionic" },
+  { name: "calcium fluoride",       formula: "CaF2",       cat: "ionic" },
+  { name: "sodium phosphate",       formula: "Na3PO4",     cat: "ionic" },
+  { name: "ammonium sulfate",       formula: "NH4SO4",     cat: "ionic" },
+  { name: "potassium iodide",       formula: "KI",         cat: "ionic" },
+  { name: "sodium bicarbonate",     formula: "NaHCO3",     cat: "ionic" },
 
-  // ── Covalent compounds ────────────────────
-  { name: "carbon dioxide",       formula: "CO2",   category: "Covalent Compound" },
-  { name: "carbon monoxide",      formula: "CO",    category: "Covalent Compound" },
-  { name: "water",                formula: "H2O",   category: "Covalent Compound" },
-  { name: "ammonia",              formula: "NH3",   category: "Covalent Compound" },
-  { name: "methane",              formula: "CH4",   category: "Covalent Compound" },
-  { name: "dinitrogen oxide",     formula: "N2O",   category: "Covalent Compound" },
-  { name: "nitrogen dioxide",     formula: "NO2",   category: "Covalent Compound" },
-  { name: "sulfur dioxide",       formula: "SO2",   category: "Covalent Compound" },
-  { name: "sulfur trioxide",      formula: "SO3",   category: "Covalent Compound" },
-  { name: "phosphorus trichloride",formula:"PCl3",  category: "Covalent Compound" },
-  { name: "phosphorus pentachloride",formula:"PCl5",category: "Covalent Compound" },
-  { name: "dinitrogen pentoxide", formula: "N2O5",  category: "Covalent Compound" },
-  { name: "silicon dioxide",      formula: "SiO2",  category: "Covalent Compound" },
-  { name: "boron trifluoride",    formula: "BF3",   category: "Covalent Compound" },
-  { name: "hydrogen peroxide",    formula: "H2O2",  category: "Covalent Compound" },
-  { name: "chlorine dioxide",     formula: "ClO2",  category: "Covalent Compound" },
-  { name: "dihydrogen sulfide",   formula: "H2S",   category: "Covalent Compound" },
+  // ── Covalent compounds (use Greek prefixes) ───────────────────────────────
+  { name: "carbon dioxide",            formula: "CO2",   cat: "covalent" },
+  { name: "carbon monoxide",           formula: "CO",    cat: "covalent" },
+  { name: "carbon tetrachloride",      formula: "CCl4",  cat: "covalent" },
+  { name: "carbon tetrafluoride",      formula: "CF4",   cat: "covalent" },
+  { name: "carbon disulfide",          formula: "CS2",   cat: "covalent" },
+  { name: "dinitrogen oxide",          formula: "N2O",   cat: "covalent" },
+  { name: "nitrogen dioxide",          formula: "NO2",   cat: "covalent" },
+  { name: "dinitrogen trioxide",       formula: "N2O3",  cat: "covalent" },
+  { name: "dinitrogen tetroxide",      formula: "N2O4",  cat: "covalent" },
+  { name: "dinitrogen pentoxide",      formula: "N2O5",  cat: "covalent" },
+  { name: "nitrogen trifluoride",      formula: "NF3",   cat: "covalent" },
+  { name: "nitrogen trichloride",      formula: "NCl3",  cat: "covalent" },
+  { name: "sulfur dioxide",            formula: "SO2",   cat: "covalent" },
+  { name: "sulfur trioxide",           formula: "SO3",   cat: "covalent" },
+  { name: "sulfur hexafluoride",       formula: "SF6",   cat: "covalent" },
+  { name: "sulfur tetrafluoride",      formula: "SF4",   cat: "covalent" },
+  { name: "sulfur dichloride",         formula: "SCl2",  cat: "covalent" },
+  { name: "disulfur dichloride",       formula: "S2Cl2", cat: "covalent" },
+  { name: "phosphorus trichloride",    formula: "PCl3",  cat: "covalent" },
+  { name: "phosphorus pentachloride",  formula: "PCl5",  cat: "covalent" },
+  { name: "tetraphosphorus decoxide",  formula: "P4O10", cat: "covalent" },
+  { name: "tetraphosphorus hexoxide",  formula: "P4O6",  cat: "covalent" },
+  { name: "silicon dioxide",           formula: "SiO2",  cat: "covalent" },
+  { name: "boron trifluoride",         formula: "BF3",   cat: "covalent" },
+  { name: "boron trichloride",         formula: "BCl3",  cat: "covalent" },
+  { name: "chlorine monofluoride",     formula: "ClF",   cat: "covalent" },
+  { name: "chlorine trifluoride",      formula: "ClF3",  cat: "covalent" },
+  { name: "dichlorine monoxide",       formula: "Cl2O",  cat: "covalent" },
+  { name: "dichlorine heptoxide",      formula: "Cl2O7", cat: "covalent" },
+  { name: "bromine trifluoride",       formula: "BrF3",  cat: "covalent" },
+  { name: "bromine pentafluoride",     formula: "BrF5",  cat: "covalent" },
+  { name: "iodine pentafluoride",      formula: "IF5",   cat: "covalent" },
+  { name: "iodine heptafluoride",      formula: "IF7",   cat: "covalent" },
+  { name: "xenon difluoride",          formula: "XeF2",  cat: "covalent" },
+  { name: "xenon tetrafluoride",       formula: "XeF4",  cat: "covalent" },
+  { name: "oxygen difluoride",         formula: "OF2",   cat: "covalent" },
+  { name: "selenium dioxide",          formula: "SeO2",  cat: "covalent" },
+  { name: "selenium trioxide",         formula: "SeO3",  cat: "covalent" },
+  { name: "diarsenic trioxide",        formula: "As2O3", cat: "covalent" },
+  { name: "diarsenic pentoxide",       formula: "As2O5", cat: "covalent" },
+  { name: "water",                     formula: "H2O",   cat: "covalent" },
+  { name: "ammonia",                   formula: "NH3",   cat: "covalent" },
+  { name: "methane",                   formula: "CH4",   cat: "covalent" },
+  { name: "hydrogen peroxide",         formula: "H2O2",  cat: "covalent" },
+  { name: "dihydrogen sulfide",        formula: "H2S",   cat: "covalent" },
 
   // ── Acids ─────────────────────────────────
-  { name: "hydrochloric acid",   formula: "HCl",    category: "Acid" },
-  { name: "hydrobromic acid",    formula: "HBr",    category: "Acid" },
-  { name: "hydroiodic acid",     formula: "HI",     category: "Acid" },
-  { name: "hydrofluoric acid",   formula: "HF",     category: "Acid" },
-  { name: "sulfuric acid",       formula: "H2SO4",  category: "Acid" },
-  { name: "sulfurous acid",      formula: "H2SO3",  category: "Acid" },
-  { name: "nitric acid",         formula: "HNO3",   category: "Acid" },
-  { name: "nitrous acid",        formula: "HNO2",   category: "Acid" },
-  { name: "phosphoric acid",     formula: "H3PO4",  category: "Acid" },
-  { name: "phosphorous acid",    formula: "H3PO3",  category: "Acid" },
-  { name: "carbonic acid",       formula: "H2CO3",  category: "Acid" },
-  { name: "acetic acid",         formula: "HC2H3O2",category: "Acid" },
-  { name: "perchloric acid",     formula: "HClO4",  category: "Acid" },
-  { name: "chloric acid",        formula: "HClO3",  category: "Acid" },
-  { name: "chlorous acid",       formula: "HClO2",  category: "Acid" },
-  { name: "hypochlorous acid",   formula: "HClO",   category: "Acid" },
-  { name: "hydrosulfuric acid",  formula: "H2S",    category: "Acid" },
+  { name: "hydrochloric acid",   formula: "HCl",      cat: "acid" },
+  { name: "hydrobromic acid",    formula: "HBr",      cat: "acid" },
+  { name: "hydroiodic acid",     formula: "HI",       cat: "acid" },
+  { name: "hydrofluoric acid",   formula: "HF",       cat: "acid" },
+  { name: "sulfuric acid",       formula: "H2SO4",    cat: "acid" },
+  { name: "sulfurous acid",      formula: "H2SO3",    cat: "acid" },
+  { name: "nitric acid",         formula: "HNO3",     cat: "acid" },
+  { name: "nitrous acid",        formula: "HNO2",     cat: "acid" },
+  { name: "phosphoric acid",     formula: "H3PO4",    cat: "acid" },
+  { name: "phosphorous acid",    formula: "H3PO3",    cat: "acid" },
+  { name: "carbonic acid",       formula: "H2CO3",    cat: "acid" },
+  { name: "acetic acid",         formula: "HC2H3O2",  cat: "acid" },
+  { name: "perchloric acid",     formula: "HClO4",    cat: "acid" },
+  { name: "chloric acid",        formula: "HClO3",    cat: "acid" },
+  { name: "chlorous acid",       formula: "HClO2",    cat: "acid" },
+  { name: "hypochlorous acid",   formula: "HClO",     cat: "acid" },
 ];
 
 // ─────────────────────────────────────────────
 //  HELPERS
 // ─────────────────────────────────────────────
 
-// Strip charge notation from a formula string (e.g. "SO42-" → "SO4")
+// Strip charge from a formula string: "SO42-" → "SO4", "NH4+" → "NH4"
 function stripCharge(f) {
-  // Remove trailing charge like "2-", "3+", "-", "+"
   return f.replace(/\d*[+-]+$/, '');
 }
 
-// Turn "Ca3(PO4)2" → "Ca<sub>3</sub>(PO<sub>4</sub>)<sub>2</sub>"
+// Render formula body (subscripts only, no charge)
 function renderFormula(f) {
   return f.replace(/(\d+)/g, '<sub>$1</sub>');
 }
 
-// Normalise an answer for comparison
-function normalise(s) {
-  return s.trim().toLowerCase()
-    .replace(/\s+/g, ' ');         // collapse whitespace
+// Render a charged ion formula: body subscripted + charge superscripted
+// e.g. "SO42-" → "SO<sub>4</sub><sup>2-</sup>"
+function renderIonFormula(f) {
+  const m = f.match(/^(.*?)(\d*[+-]+)$/);
+  if (!m) return renderFormula(f);
+  return renderFormula(m[1]) + '<sup>' + m[2] + '</sup>';
 }
 
-// Build accepted answers for a formula (charge-free only)
-function formulaAliases(f) {
-  const base = stripCharge(f).replace(/\s/g, '');
-  return [normalise(base)];
+function normalise(s) {
+  return s.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
 // ─────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────
-let current = null;
-let direction = 'nameToFormula'; // or 'formulaToName'
+let pool         = [];
+let current      = null;
+let direction    = 'nameToFormula';
 let scoreCorrect = 0;
-let scoreTotal = 0;
+let scoreTotal   = 0;
 let showingResult = false;
+
+const LABELS = {
+  all:     'Everything',
+  ion:     'Ions',
+  ionic:   'Ionic Compounds',
+  covalent:'Covalent Compounds',
+  acid:    'Acids',
+};
+
+// ─────────────────────────────────────────────
+//  NAVIGATION
+// ─────────────────────────────────────────────
+function startQuiz(cat) {
+  pool = cat === 'all' ? ALL : ALL.filter(e => e.cat === cat);
+  scoreCorrect = 0;
+  scoreTotal   = 0;
+  document.getElementById('score-correct').textContent = '0';
+  document.getElementById('score-total').textContent   = '0';
+  document.getElementById('mode-label').textContent    = LABELS[cat] || cat;
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  pickQuestion();
+}
+
+function goBack() {
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('menu').style.display = 'flex';
+}
 
 // ─────────────────────────────────────────────
 //  QUESTION ENGINE
 // ─────────────────────────────────────────────
 function pickQuestion() {
-  current = ions[Math.floor(Math.random() * ions.length)];
+  current   = pool[Math.floor(Math.random() * pool.length)];
   direction = Math.random() < 0.5 ? 'nameToFormula' : 'formulaToName';
 
-  document.getElementById('feedback').textContent = '';
-  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent      = '';
+  document.getElementById('feedback').className        = 'feedback';
   document.getElementById('correct-answer').textContent = '';
 
-  const givenEl = document.getElementById('given');
+  const givenEl  = document.getElementById('given');
   const promptEl = document.getElementById('prompt');
 
   if (direction === 'nameToFormula') {
-    promptEl.textContent = 'Write the formula for:';
-    givenEl.textContent = current.name;
+    promptEl.textContent  = 'Write the formula for:';
+    givenEl.textContent   = current.name;
   } else {
-    promptEl.textContent = 'Write the name for:';
-    // Display formula without charge
-    givenEl.innerHTML = renderFormula(stripCharge(current.formula));
+    promptEl.textContent  = 'Write the name for:';
+    // Show charge for ions so they're unambiguous vs covalent look-alikes
+    givenEl.innerHTML = current.ion
+      ? renderIonFormula(current.formula)
+      : renderFormula(current.formula);
   }
 
   const input = document.getElementById('answer-input');
   input.value = '';
   input.focus();
   showingResult = false;
+  document.getElementById('submit-btn').textContent = 'Check';
 }
 
 function checkAnswer() {
   if (showingResult) {
     pickQuestion();
-    document.getElementById('submit-btn').textContent = 'Check';
     return;
   }
 
-  const input = document.getElementById('answer-input');
-  const raw = input.value;
+  const raw = document.getElementById('answer-input').value;
   if (!raw.trim()) return;
 
   const userNorm = normalise(raw);
   let correct = false;
 
   if (direction === 'nameToFormula') {
-    const accepted = formulaAliases(current.formula);
-    correct = accepted.includes(userNorm);
+    // Accept formula without charge
+    const expected = normalise(stripCharge(current.formula).replace(/\s/g, ''));
+    correct = userNorm === expected;
   } else {
     correct = userNorm === normalise(current.name);
-    // also accept without trailing "ion"
-    if (!correct) {
-      correct = userNorm === normalise(current.name.replace(/ ion$/i, ''));
-    }
   }
 
   scoreTotal++;
-  const feedbackEl = document.getElementById('feedback');
-  const correctAnsEl = document.getElementById('correct-answer');
+  const feedbackEl    = document.getElementById('feedback');
+  const correctAnsEl  = document.getElementById('correct-answer');
 
   if (correct) {
     scoreCorrect++;
     feedbackEl.textContent = 'Correct!';
-    feedbackEl.className = 'feedback correct';
+    feedbackEl.className   = 'feedback correct';
     correctAnsEl.textContent = '';
-    showingResult = true;
-    document.getElementById('submit-btn').textContent = 'Next →';
   } else {
     feedbackEl.textContent = 'Wrong!';
-    feedbackEl.className = 'feedback wrong';
-    const rightAns = direction === 'nameToFormula' ? stripCharge(current.formula) : current.name;
+    feedbackEl.className   = 'feedback wrong';
+    const rightAns = direction === 'nameToFormula'
+      ? stripCharge(current.formula)
+      : current.name;
     correctAnsEl.textContent = `Answer: ${rightAns}`;
-    showingResult = true;
-    document.getElementById('submit-btn').textContent = 'Next →';
   }
 
+  showingResult = true;
+  document.getElementById('submit-btn').textContent    = 'Next →';
   document.getElementById('score-correct').textContent = scoreCorrect;
-  document.getElementById('score-total').textContent = scoreTotal;
+  document.getElementById('score-total').textContent   = scoreTotal;
 }
 
 // ─────────────────────────────────────────────
 //  EVENT LISTENERS
 // ─────────────────────────────────────────────
 document.getElementById('submit-btn').addEventListener('click', checkAnswer);
-
 document.getElementById('answer-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') checkAnswer();
 });
-
-// Start!
-pickQuestion();
 </script>
 </body>
 </html>
