@@ -452,13 +452,21 @@ function isPolyatomicIon(entry) {
   return !/^[A-Z][a-z]?\d*$/.test(body);
 }
 
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function buildLargePool(entries, targetSize = 1200) {
-  if (entries.length >= targetSize) return [...entries];
+  if (entries.length >= targetSize) return shuffle([...entries]);
 
   const expanded = [];
   while (expanded.length < targetSize) {
-    const shuffled = [...entries].sort(() => Math.random() - 0.5);
-    for (const entry of shuffled) {
+    const batch = shuffle([...entries]);
+    for (const entry of batch) {
       expanded.push(entry);
       if (expanded.length >= targetSize) break;
     }
@@ -487,6 +495,7 @@ function getLabel(entry) {
 //  STATE
 // ─────────────────────────────────────────────
 let pool         = [];
+let poolIndex    = 0;
 let current      = null;
 let direction    = 'nameToFormula';
 let scoreCorrect = 0;
@@ -507,6 +516,7 @@ const LABELS = {
 function startQuiz(cat) {
   const filtered = cat === 'all' ? ALL : ALL.filter(e => e.cat === cat);
   pool = buildLargePool(filtered, 1200);
+  poolIndex = 0;
   scoreCorrect = 0;
   scoreTotal   = 0;
   document.getElementById('score-correct').textContent = '0';
@@ -526,7 +536,12 @@ function goBack() {
 //  QUESTION ENGINE
 // ─────────────────────────────────────────────
 function pickQuestion() {
-  current   = pool[Math.floor(Math.random() * pool.length)];
+  if (poolIndex >= pool.length) {
+    // Reshuffle and restart when the pool is exhausted
+    shuffle(pool);
+    poolIndex = 0;
+  }
+  current   = pool[poolIndex++];
   direction = Math.random() < 0.5 ? 'nameToFormula' : 'formulaToName';
 
   document.getElementById('type-badge').textContent    = getLabel(current);
